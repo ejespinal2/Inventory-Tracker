@@ -33,7 +33,6 @@ export default function Home() {
   const [open, setOpen] = useState(false)
   const [itemName, setItemName] = useState('')
 
-
   // We'll add our component logic here
   const updateInventory = async () => {
     const snapshot = query(collection(firestore, 'inventory'))
@@ -77,7 +76,6 @@ export default function Home() {
 
   const handleOpen = () => setOpen(true)
   const handleClose = () => setOpen(false)
-
 
   return (
     <Box
