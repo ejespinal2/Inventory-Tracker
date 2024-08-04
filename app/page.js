@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { Box, Stack, Typography, Button, Modal, TextField, CircularProgress } from '@mui/material'
+import { Box, Stack, Typography, Button, Modal, TextField } from '@mui/material'
 import { firestore } from '@/firebase'
 import {
   collection,
@@ -29,167 +29,149 @@ const style = {
 }
 
 export default function Home() {
-  const [inventory, setInventory] = useState([])
-  const [open, setOpen] = useState(false)
-  const [itemName, setItemName] = useState('')
-  const [loading, setLoading] = useState(false) // Added loading state
-
-  const updateInventory = async () => {
-    setLoading(true)
-    try {
-      const snapshot = query(collection(firestore, 'inventory'))
-      const docs = await getDocs(snapshot)
-      const inventoryList = []
-      docs.forEach((doc) => {
-        inventoryList.push({ name: doc.id, ...doc.data() })
-      })
-      setInventory(inventoryList)
-    } catch (error) {
-      console.error('Error updating inventory:', error) // Added error handling
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  const addItem = async (item) => {
-    try {
-      const docRef = doc(collection(firestore, 'inventory'), item)
-      const docSnap = await getDoc(docRef)
-      if (docSnap.exists()) {
-        const { quantity } = docSnap.data()
-        await setDoc(docRef, { quantity: quantity + 1 })
-      } else {
-        await setDoc(docRef, { quantity: 1 })
-      }
-      await updateInventory()
-    } catch (error) {
-      console.error('Error adding item:', error) // Added error handling
-    }
-  }
-
-  const removeItem = async (item) => {
-    try {
-      const docRef = doc(collection(firestore, 'inventory'), item)
-      const docSnap = await getDoc(docRef)
-      if (docSnap.exists()) {
-        const { quantity } = docSnap.data()
-        if (quantity === 1) {
-          await deleteDoc(docRef)
-        } else {
-          await setDoc(docRef, { quantity: quantity - 1 })
-        }
-      }
-      await updateInventory()
-    } catch (error) {
-      console.error('Error removing item:', error) // Added error handling
-    }
-  }
-
-  useEffect(() => {
-    updateInventory()
-  }, [])
-
-  const handleOpen = () => setOpen(true)
-  const handleClose = () => setOpen(false)
-
+  // We'll add our component logic here
   return (
-    <Box
-      width="100vw"
-      height="100vh"
-      display={'flex'}
-      justifyContent={'center'}
-      flexDirection={'column'}
-      alignItems={'center'}
-      gap={2}
-    >
-      <Modal
-        open={open}
-        onClose={handleClose}
-        aria-labelledby="modal-modal-title"
-        aria-describedby="modal-modal-description"
-      >
-        <Box sx={style}>
-          <Typography id="modal-modal-title" variant="h6" component="h2">
-            Add Item
-          </Typography>
-          <Stack width="100%" direction={'row'} spacing={2}>
-            <TextField
-              id="outlined-basic"
-              label="Item"
-              variant="outlined"
-              fullWidth
-              value={itemName}
-              onChange={(e) => setItemName(e.target.value)}
-            />
-            <Button
-              variant="outlined"
-              onClick={() => {
-                addItem(itemName)
-                setItemName('')
-                handleClose()
-              }}
-            >
-              Add
-            </Button>
-          </Stack>
-        </Box>
-      </Modal>
-      <Button variant="contained" onClick={handleOpen}>
-        Add New Item
-      </Button>
-      <Box border={'1px solid #333'}>
-        <Box
-          width="800px"
-          height="100px"
-          bgcolor={'#ADD8E6'}
-          display={'flex'}
-          justifyContent={'center'}
-          alignItems={'center'}
-        >
-          <Typography variant={'h2'} color={'#333'} textAlign={'center'}>
-            Inventory Items
-          </Typography>
-        </Box>
-        {loading ? (
-          <CircularProgress /> // Loading spinner
-        ) : (
-          <Stack width="800px" height="300px" spacing={2} overflow={'auto'}>
-            {inventory.length === 0 ? (
-              <Typography variant={'h4'} color={'#333'} textAlign={'center'}>
-                No items in inventory // Empty state handling
-              </Typography>
-            ) : (
-              inventory.map(({ name, quantity }) => (
-                <Box
-                  key={name}
-                  width="100%"
-                  minHeight="150px"
-                  display={'flex'}
-                  justifyContent={'space-between'}
-                  alignItems={'center'}
-                  bgcolor={'#f0f0f0'}
-                  paddingX={5}
-                >
-                  <Typography variant={'h3'} color={'#333'} textAlign={'center'}>
-                    {name.charAt(0).toUpperCase() + name.slice(1)}
-                  </Typography>
-                  <Typography variant={'h3'} color={'#333'} textAlign={'center'}>
-                    Quantity: {quantity}
-                  </Typography>
-                  <Stack direction="row" spacing={2}>
-                    <Button variant="contained" onClick={() => addItem(name)}>
-                      Add
-                    </Button>
-                    <Button variant="contained" onClick={() => removeItem(name)}>
-                      Remove
-                    </Button>
-                  </Stack>
-                </Box>
-              ))
-            )}
-          </Stack>
-        )}
-      </Box>
+    <Box>
+      <Typography variant="h1">Inventory Management</Typography>
     </Box>
   )
 }
+
+const [inventory, setInventory] = useState([])
+const [open, setOpen] = useState(false)
+const [itemName, setItemName] = useState('')
+
+const updateInventory = async () => {
+  const snapshot = query(collection(firestore, 'inventory'))
+  const docs = await getDocs(snapshot)
+  const inventoryList = []
+  docs.forEach((doc) => {
+    inventoryList.push({ name: doc.id, ...doc.data() })
+  })
+  setInventory(inventoryList)
+}
+
+useEffect(() => {
+  updateInventory()
+}, [])
+
+const addItem = async (item) => {
+  const docRef = doc(collection(firestore, 'inventory'), item)
+  const docSnap = await getDoc(docRef)
+  if (docSnap.exists()) {
+    const { quantity } = docSnap.data()
+    await setDoc(docRef, { quantity: quantity + 1 })
+  } else {
+    await setDoc(docRef, { quantity: 1 })
+  }
+  await updateInventory()
+}
+
+const removeItem = async (item) => {
+  const docRef = doc(collection(firestore, 'inventory'), item)
+  const docSnap = await getDoc(docRef)
+  if (docSnap.exists()) {
+    const { quantity } = docSnap.data()
+    if (quantity === 1) {
+      await deleteDoc(docRef)
+    } else {
+      await setDoc(docRef, { quantity: quantity - 1 })
+    }
+  }
+  await updateInventory()
+}
+
+const handleOpen = () => setOpen(true)
+const handleClose = () => setOpen(false)
+
+return (
+  <Box
+    width="100vw"
+    height="100vh"
+    display={'flex'}
+    justifyContent={'center'}
+    flexDirection={'column'}
+    alignItems={'center'}
+    gap={2}
+  >
+    <Modal
+      open={open}
+      onClose={handleClose}
+      aria-labelledby="modal-modal-title"
+      aria-describedby="modal-modal-description"
+    >
+      <Box sx={style}>
+        <Typography id="modal-modal-title" variant="h6" component="h2">
+          Add Item
+        </Typography>
+        <Stack width="100%" direction={'row'} spacing={2}>
+          <TextField
+            id="outlined-basic"
+            label="Item"
+            variant="outlined"
+            fullWidth
+            value={itemName}
+            onChange={(e) => setItemName(e.target.value)}
+          />
+          <Button
+            variant="outlined"
+            onClick={() => {
+              addItem(itemName)
+              setItemName('')
+              handleClose()
+            }}
+          >
+            Add
+          </Button>
+        </Stack>
+      </Box>
+    </Modal>
+    <Button variant="contained" onClick={handleOpen}>
+      Add New Item
+    </Button>
+    <Box border={'1px solid #333'}>
+      <Box
+        width="800px"
+        height="100px"
+        bgcolor={'#ADD8E6'}
+        display={'flex'}
+        justifyContent={'center'}
+        alignItems={'center'}
+      >
+        <Typography variant={'h2'} color={'#333'} textAlign={'center'}>
+          Inventory Items
+        </Typography>
+      </Box>
+      <Stack width="800px" height="300px" spacing={2} overflow={'auto'}>
+        {inventory.map(({name, quantity}) => (
+          <Box
+            key={name}
+            width="100%"
+            minHeight="150px"
+            display={'flex'}
+            justifyContent={'space-between'}
+            alignItems={'center'}
+            bgcolor={'#f0f0f0'}
+            paddingX={5}
+          >
+            <Typography variant={'h3'} color={'#333'} textAlign={'center'}>
+              {name.charAt(0).toUpperCase() + name.slice(1)}
+            </Typography>
+            <Typography variant={'h3'} color={'#333'} textAlign={'center'}>
+              Quantity: {quantity}
+            </Typography>
+            <Stack direction="row" spacing={2}>
+                    <Button variant="contained" onClick={() => addItem(name)}>
+                      Add
+                    </Button>
+            <Button variant="contained" onClick={() => removeItem(name)}>
+              Remove
+            </Button>
+            </Stack>
+          </Box>
+        ))}
+      </Stack>
+    </Box>
+  </Box>
+)
+
