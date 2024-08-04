@@ -1,3 +1,5 @@
+'use client'
+
 import { useState, useEffect } from 'react'
 import { Box, Stack, Typography, Button, Modal, TextField } from '@mui/material'
 import { firestore } from '@/firebase'
@@ -30,75 +32,52 @@ export default function Home() {
   const [inventory, setInventory] = useState([])
   const [open, setOpen] = useState(false)
   const [itemName, setItemName] = useState('')
-  const [loading, setLoading] = useState(false)
-  const [error, setError] = useState(null)
 
+
+  // We'll add our component logic here
   const updateInventory = async () => {
-    setLoading(true)
-    setError(null)
-    try {
-      const snapshot = query(collection(firestore, 'inventory'))
-      const docs = await getDocs(snapshot)
-      const inventoryList = []
-      docs.forEach((doc) => {
-        inventoryList.push({ name: doc.id, ...doc.data() })
-      })
-      setInventory(inventoryList)
-    } catch (err) {
-      setError('Failed to fetch inventory')
-    } finally {
-      setLoading(false)
-    }
+    const snapshot = query(collection(firestore, 'inventory'))
+    const docs = await getDocs(snapshot)
+    const inventoryList = []
+    docs.forEach((doc) => {
+      inventoryList.push({ name: doc.id, ...doc.data() })
+    })
+    setInventory(inventoryList)
   }
 
   const addItem = async (item) => {
-    setLoading(true)
-    setError(null)
-    try {
-      const docRef = doc(collection(firestore, 'inventory'), item)
-      const docSnap = await getDoc(docRef)
-      if (docSnap.exists()) {
-        const { quantity } = docSnap.data()
-        await setDoc(docRef, { quantity: quantity + 1 })
-      } else {
-        await setDoc(docRef, { quantity: 1 })
-      }
-      await updateInventory()
-    } catch (err) {
-      setError('Failed to add item')
-    } finally {
-      setLoading(false)
+    const docRef = doc(collection(firestore, 'inventory'), item)
+    const docSnap = await getDoc(docRef)
+    if (docSnap.exists()) {
+      const { quantity } = docSnap.data()
+      await setDoc(docRef, { quantity: quantity + 1 })
+    } else {
+      await setDoc(docRef, { quantity: 1 })
     }
+    await updateInventory()
   }
-
+  
   const removeItem = async (item) => {
-    setLoading(true)
-    setError(null)
-    try {
-      const docRef = doc(collection(firestore, 'inventory'), item)
-      const docSnap = await getDoc(docRef)
-      if (docSnap.exists()) {
-        const { quantity } = docSnap.data()
-        if (quantity === 1) {
-          await deleteDoc(docRef)
-        } else {
-          await setDoc(docRef, { quantity: quantity - 1 })
-        }
+    const docRef = doc(collection(firestore, 'inventory'), item)
+    const docSnap = await getDoc(docRef)
+    if (docSnap.exists()) {
+      const { quantity } = docSnap.data()
+      if (quantity === 1) {
+        await deleteDoc(docRef)
+      } else {
+        await setDoc(docRef, { quantity: quantity - 1 })
       }
-      await updateInventory()
-    } catch (err) {
-      setError('Failed to remove item')
-    } finally {
-      setLoading(false)
     }
+    await updateInventory()
   }
-
+  
   useEffect(() => {
     updateInventory()
   }, [])
 
   const handleOpen = () => setOpen(true)
   const handleClose = () => setOpen(false)
+
 
   return (
     <Box
@@ -136,21 +115,15 @@ export default function Home() {
                 setItemName('')
                 handleClose()
               }}
-              disabled={loading}
             >
               Add
             </Button>
           </Stack>
         </Box>
       </Modal>
-      <Button variant="contained" onClick={handleOpen} disabled={loading}>
+      <Button variant="contained" onClick={handleOpen}>
         Add New Item
       </Button>
-      {error && (
-        <Typography variant="body1" color="error">
-          {error}
-        </Typography>
-      )}
       <Box border={'1px solid #333'}>
         <Box
           width="800px"
@@ -165,7 +138,7 @@ export default function Home() {
           </Typography>
         </Box>
         <Stack width="800px" height="300px" spacing={2} overflow={'auto'}>
-          {inventory.map(({ name, quantity }) => (
+          {inventory.map(({name, quantity}) => (
             <Box
               key={name}
               width="100%"
@@ -182,11 +155,11 @@ export default function Home() {
               <Typography variant={'h3'} color={'#333'} textAlign={'center'}>
                 Quantity: {quantity}
               </Typography>
-              <Stack direction="row" spacing={2}>
-                <Button variant="contained" onClick={() => addItem(name)} disabled={loading}>
+              <Stack direction = "row" spacing={2}>
+                <Button variant="contained" onClick={() => addItem(name)}>
                   Add
                 </Button>
-                <Button variant="contained" onClick={() => removeItem(name)} disabled={loading}>
+                <Button variant="contained" onClick={() => removeItem(name)}>
                   Remove
                 </Button>
               </Stack>
